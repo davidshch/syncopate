@@ -6,7 +6,8 @@
     "dev:web": "pnpm --filter @syncopate/web dev",
     "dev:server": "pnpm --filter @syncopate/server dev",
     "build": "pnpm -r build",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "test": "pnpm --filter @syncopate/shared test"
   },
   "devDependencies": {
     "@types/node": "^20",
