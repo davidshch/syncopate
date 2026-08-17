@@ -1,5 +1,23 @@
 export const DEFAULT_CLICK_LEN = 64;
 export const MAX_TEMPO_ERROR = 0.001;
+export const EPOCH_SNAP_SAMPLES = 64;
+export const EPOCH_HARD_SNAP_SAMPLES = 240;
+
+export type EpochUpdateMode = "snap" | "slew" | "hard-snap";
+
+/** First lock and stopped clock snap; small drift slews; >5 ms hard-snaps. */
+export function epochUpdateMode(opts: {
+  current: number;
+  next: number;
+  hasEpoch: boolean;
+  playing: boolean;
+}): EpochUpdateMode {
+  if (!opts.hasEpoch || !opts.playing) return "snap";
+  const error = Math.abs(opts.next - opts.current);
+  if (error <= EPOCH_SNAP_SAMPLES) return "snap";
+  if (error > EPOCH_HARD_SNAP_SAMPLES) return "hard-snap";
+  return "slew";
+}
 
 export function samplesPerBeat(sampleRate: number, bpm: number): number {
   return (sampleRate * 60) / bpm;

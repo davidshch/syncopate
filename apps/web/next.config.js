@@ -17,6 +17,12 @@ const nextConfig = {
           { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
         ],
       },
+      {
+        source: "/workers/:path*",
+        headers: [
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+        ],
+      },
     ];
   },
 };

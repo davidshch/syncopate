@@ -4,6 +4,7 @@ import {
   beatIndex,
   beatPhase,
   clickOnsetFrames,
+  epochUpdateMode,
   samplesPerBeat,
   slewEpochFrame,
 } from "./beat";
@@ -63,5 +64,48 @@ describe("PLL slew", () => {
 
   it("snaps when within 1 sample", () => {
     expect(slewEpochFrame(100, 100.4, 128)).toBe(100.4);
+  });
+});
+
+describe("epochUpdateMode", () => {
+  it("snaps the first epoch even if playing is already true", () => {
+    expect(
+      epochUpdateMode({
+        current: 0,
+        next: -28_800_000,
+        hasEpoch: false,
+        playing: true,
+      }),
+    ).toBe("snap");
+  });
+
+  it("snaps while stopped", () => {
+    expect(
+      epochUpdateMode({
+        current: 0,
+        next: -1000,
+        hasEpoch: true,
+        playing: false,
+      }),
+    ).toBe("snap");
+  });
+
+  it("slews small playing drift and hard-snaps jumps over 5 ms", () => {
+    expect(
+      epochUpdateMode({
+        current: 1000,
+        next: 1100,
+        hasEpoch: true,
+        playing: true,
+      }),
+    ).toBe("slew");
+    expect(
+      epochUpdateMode({
+        current: 1000,
+        next: 1300,
+        hasEpoch: true,
+        playing: true,
+      }),
+    ).toBe("hard-snap");
   });
 });

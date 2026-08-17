@@ -122,6 +122,14 @@ export class OffsetEstimator {
   }
 }
 
+/** Pair output-stream contextTime with performance.now() (both from getOutputTimestamp). */
+export function audioOriginFromOutputTimestamp(opts: {
+  contextTime: number;
+  performanceTime: number;
+}): number {
+  return opts.performanceTime * 1000 - opts.contextTime * 1e6;
+}
+
 export function serverTimeToAudioTime(
   serverUs: number,
   offsetUs: number,

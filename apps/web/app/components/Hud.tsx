@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { getJamEngine, SERVER_HUD_SNAPSHOT } from "@/lib/jam-engine";
+import {
+  getJamEngine,
+  SERVER_HUD_SNAPSHOT,
+  type HudSnapshot,
+} from "@/lib/jam-engine";
 
 function formatMs(value: number | null, digits = 2): string {
   if (value === null) return "—";
@@ -25,16 +29,21 @@ export function Hud() {
     <div className="flex flex-col gap-5">
       <dl className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-sm text-zinc-600 dark:text-zinc-400 sm:grid-cols-3">
         <Stat label="signaling" value={snap.status} />
+        <Stat label="role" value={snap.role ?? "—"} />
         <Stat
-          label="peer"
+          label="you"
           value={snap.peerId ? snap.peerId.slice(0, 8) : "—"}
+        />
+        <Stat
+          label="remote"
+          value={snap.remotePeerId ? snap.remotePeerId.slice(0, 8) : "waiting"}
         />
         <Stat
           label="isolated"
           value={snap.isolated ? "COOP/COEP" : "no"}
         />
-        <Stat label="rtt" value={formatMs(snap.rttMs)} />
-        <Stat label="jitter" value={formatMs(snap.jitterMs)} />
+        <Stat label="clock rtt" value={formatMs(snap.rttMs)} />
+        <Stat label="clock jitter" value={formatMs(snap.jitterMs)} />
         <Stat label="offset" value={formatMs(snap.offsetMs)} />
         <Stat
           label="offset σ"
@@ -48,6 +57,24 @@ export function Hud() {
         />
         <Stat label="probes" value={`${snap.samples}/16`} />
         <Stat label="audio I/O" value={formatMs(snap.ioLatencyMs)} />
+        <Stat label="audio" value={snap.audio} />
+        <Stat label="mode" value={snap.audio === "live" ? "LIVE" : "—"} />
+        <Stat label="ice" value={snap.iceState ?? "—"} />
+        <Stat label="ping" value={formatMs(snap.webrtcRttMs)} />
+        <Stat label="jb delay" value={formatMs(snap.jitterBufferMs)} />
+        <Stat
+          label="loss"
+          value={
+            snap.packetLoss === null
+              ? "—"
+              : `${(snap.packetLoss * 100).toFixed(1)}%`
+          }
+        />
+        <Stat
+          label="underruns"
+          value={snap.underruns === null ? "—" : `${snap.underruns}`}
+        />
+        <Stat label="m2e est." value={formatMs(estimateM2e(snap))} />
       </dl>
 
       <div className="flex items-end gap-3">
@@ -70,6 +97,18 @@ export function Hud() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => void engine.enableAudio()}
+          disabled={snap.status !== "connected" || snap.audio !== "off"}
+          className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
+        >
+          {snap.audio === "live"
+            ? "Audio live"
+            : snap.audio === "starting"
+              ? "Starting audio…"
+              : "Enable audio"}
+        </button>
         <button
           type="button"
           onClick={() =>
@@ -108,14 +147,31 @@ export function Hud() {
 
       {snap.error ? (
         <p className="text-sm text-red-600">{snap.error}</p>
+      ) : snap.audio === "live" ? (
+        <p className="text-sm text-zinc-500">
+          Headphones required — echo cancellation is off. You hear yourself
+          dry; remote audio is Opus 5 ms frames over an unordered DataChannel.
+          Two tabs on one machine will echo your voice back.
+        </p>
+      ) : snap.playing ? (
+        <p className="text-sm text-zinc-500">
+          Both tabs click from the same server epoch. Start the metronome on
+          each; they should lock even if you press the buttons seconds apart.
+        </p>
       ) : (
         <p className="text-sm text-zinc-500">
-          Two browsers on this page share the same session epoch — clicks should
-          stay within ~5 ms on a LAN.
+          Open this page in two Chrome tabs, enable audio on both, and grant
+          microphone access. Host (first tab) sends the SDP offer.
         </p>
       )}
     </div>
   );
+}
+
+function estimateM2e(snap: HudSnapshot): number | null {
+  if (snap.ioLatencyMs === null || snap.jitterBufferMs === null) return null;
+  const oneWay = snap.webrtcRttMs === null ? 0 : snap.webrtcRttMs / 2;
+  return snap.ioLatencyMs + 5 + oneWay + snap.jitterBufferMs;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

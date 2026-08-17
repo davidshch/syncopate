@@ -4,6 +4,7 @@ import {
   IIR_SNAP_US,
   OffsetEstimator,
   SERVER_HITCH_US,
+  audioOriginFromOutputTimestamp,
   fakeSymmetricProbe,
   probeStats,
   serverTimeToAudioTime,
@@ -125,5 +126,16 @@ describe("serverTimeToAudioTime", () => {
   it("maps server time through offset onto audio time", () => {
     const audio = serverTimeToAudioTime(2_000_000, 500_000, 1_000_000, 0.005);
     expect(audio).toBeCloseTo(0.495, 6);
+  });
+});
+
+describe("audioOriginFromOutputTimestamp", () => {
+  it("pairs output contextTime with performanceTime", () => {
+    expect(
+      audioOriginFromOutputTimestamp({
+        contextTime: 1.5,
+        performanceTime: 2000,
+      }),
+    ).toBeCloseTo(500_000, 6);
   });
 });

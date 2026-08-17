@@ -8,8 +8,8 @@ export default function Home() {
           Syncopate
         </h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          Shared metronome on a Cristian/NTP clock. Start on two machines; the
-          worklet clicks in phase from the server epoch.
+          Shared metronome plus P2P audio. Two Chrome tabs join a room; audio
+          is custom Opus over a WebRTC DataChannel (Mode A).
         </p>
         <Hud />
       </main>
