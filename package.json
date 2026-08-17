@@ -1,0 +1,26 @@
+{
+  "name": "syncopate",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter @syncopate/web --filter @syncopate/server dev",
+    "dev:web": "pnpm --filter @syncopate/web dev",
+    "dev:server": "pnpm --filter @syncopate/server dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.14.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}
